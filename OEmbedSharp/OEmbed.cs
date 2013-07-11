@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Runtime.Caching;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
@@ -10,31 +12,59 @@ namespace OEmbedSharp
 {
     public class OEmbed
     {
-        public OEmbed()
+        static OEmbed()
         {
             // YouTube
-            _providers.Add(new OEmbedProvider
+            Providers.Add(new OEmbedProvider
             {
-                Schemes = new[] { "http://www.youtube.com/watch?v=*", "http://youtu.be/*" },
+                Name = "YouTube",
+                Schemes = new[] { @"https?://www\.youtube\.com/watch?v=*", @"https?://youtu\.be/*" },
                 Endpoint = "http://www.youtube.com/oembed"
             });
 
             // Flickr
-            _providers.Add(new OEmbedProvider
+            Providers.Add(new OEmbedProvider
             {
-                Schemes = new[] { "http://*.flickr.com/photos/*", "http://flic.kr/p/*" },
+                Name = "Flickr",
+                Schemes = new[] { @"https?://*\.flickr\.com/photos/*", @"https?://flic\.kr/p/*" },
                 Endpoint = "http://www.flickr.com/services/oembed"
             });
 
             // SlideShare
-            _providers.Add(new OEmbedProvider
+            Providers.Add(new OEmbedProvider
             {
-                Schemes = new[] { "http://www.slideshare.net/*/*" },
+                Name = "SlideShare",
+                Schemes = new[] { @"https?://www\.slideshare\.net/*/*" },
                 Endpoint = "http://www.slideshare.net/api/oembed/2"
             });
         }
 
-        private readonly List<OEmbedProvider> _providers = new List<OEmbedProvider>();
+        public OEmbed()
+            : this(new OEmbedOptions())
+        {
+        }
+
+        public OEmbed(OEmbedOptions options)
+        {
+            _options = options;
+        }
+
+        private readonly OEmbedOptions _options;
+
+        private static readonly MemoryCache _cache = MemoryCache.Default;
+        private static readonly List<OEmbedProvider> _providers = new List<OEmbedProvider>();
+
+        public static ObjectCache Cache
+        {
+            get { return _cache; }
+        }
+
+        public static List<OEmbedProvider> Providers
+        {
+            get { return _providers; }
+        }
+
+        public bool EnableCache { get; set; }
 
         public bool CanEmbed(string url)
         {
@@ -55,6 +85,11 @@ namespace OEmbedSharp
                 throw new ArgumentNullException("url");
             }
 
+            if (_options.EnableCache && _cache.Contains(url))
+            {
+                return (OEmbedResponse)_cache.Get(url);
+            }
+
             var provider = _providers.FirstOrDefault(p => p.CanHandleUrl(url));
 
             if (provider == null)
@@ -62,11 +97,16 @@ namespace OEmbedSharp
                 throw new ArgumentException("url");
             }
 
-            var endpoint = provider.Endpoint + "?" + url;
+            var endpoint = provider.Endpoint + "?url=" + WebUtility.UrlEncode(url);
 
             var content = await new HttpClient().GetStringAsync(endpoint);
 
             var response = JsonConvert.DeserializeObject<OEmbedResponse>(content);
+
+            if (_options.EnableCache && response.CacheAge > 0)
+            {
+                _cache.Add(url, response, DateTimeOffset.Now.AddSeconds(response.CacheAge));
+            }
 
             return response;
         } 

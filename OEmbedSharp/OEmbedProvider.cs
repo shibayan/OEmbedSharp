@@ -5,6 +5,8 @@ namespace OEmbedSharp
 {
     public class OEmbedProvider
     {
+        public string Name { get; set; }
+
         public string[] Schemes { get; set; }
 
         public string Endpoint { get; set; }
