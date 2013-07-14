@@ -18,7 +18,7 @@ namespace OEmbedSharp
             Providers.Add(new OEmbedProvider
             {
                 Name = "YouTube",
-                Schemes = new[] { @"https?://www\.youtube\.com/watch?v=*", @"https?://youtu\.be/*" },
+                Schemes = new[] { @"https?://www\.youtube\.com/watch\?v=.+", @"https?://youtu\.be/.+" },
                 Endpoint = "http://www.youtube.com/oembed"
             });
 
@@ -26,7 +26,7 @@ namespace OEmbedSharp
             Providers.Add(new OEmbedProvider
             {
                 Name = "Flickr",
-                Schemes = new[] { @"https?://*\.flickr\.com/photos/*", @"https?://flic\.kr/p/*" },
+                Schemes = new[] { @"https?://.+\.flickr\.com/photos/.+", @"https?://flic\.kr/p/.+" },
                 Endpoint = "http://www.flickr.com/services/oembed"
             });
 
@@ -34,7 +34,7 @@ namespace OEmbedSharp
             Providers.Add(new OEmbedProvider
             {
                 Name = "SlideShare",
-                Schemes = new[] { @"https?://www\.slideshare\.net/*/*" },
+                Schemes = new[] { @"https?://www\.slideshare\.net/.+/.+" },
                 Endpoint = "http://www.slideshare.net/api/oembed/2"
             });
         }
@@ -85,11 +85,6 @@ namespace OEmbedSharp
                 throw new ArgumentNullException("url");
             }
 
-            if (_options.EnableCache && _cache.Contains(url))
-            {
-                return (OEmbedResponse)_cache.Get(url);
-            }
-
             var provider = _providers.FirstOrDefault(p => p.CanHandleUrl(url));
 
             if (provider == null)
@@ -97,7 +92,12 @@ namespace OEmbedSharp
                 throw new ArgumentException("url");
             }
 
-            var endpoint = provider.Endpoint + "?url=" + WebUtility.UrlEncode(url);
+            if (_options.EnableCache && _cache.Contains(url))
+            {
+                return (OEmbedResponse)_cache.Get(url);
+            }
+
+            var endpoint = provider.Endpoint + "?url=" + WebUtility.UrlEncode(url) + "&format=json";
 
             var content = await new HttpClient().GetStringAsync(endpoint);
 
