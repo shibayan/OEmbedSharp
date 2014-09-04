@@ -1,6 +1,6 @@
 ﻿namespace OEmbedSharp
 {
-    public class OEmbedResponseType
+    public sealed class OEmbedResponseType
     {
         public const string Video = "video";
 

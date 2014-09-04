@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -64,6 +63,26 @@ namespace OEmbedSharp.Tests
             var oembed = new OEmbed();
 
             var actual = await oembed.EmbedAsync("http://www.slideshare.net/shibayan/knockout-11523371");
+
+            Assert.IsNotNull(actual);
+        }
+
+        [TestMethod]
+        public void CanEmbedForHatenaBlog()
+        {
+            var oembed = new OEmbed();
+
+            var canEmbed = oembed.CanEmbed("http://staff.hatenablog.com/entry/2014/09/03/153938");
+
+            Assert.IsTrue(canEmbed);
+        }
+
+        [TestMethod]
+        public async Task EmbedAsyncForHatenaBlog()
+        {
+            var oembed = new OEmbed();
+
+            var actual = await oembed.EmbedAsync("http://staff.hatenablog.com/entry/2014/09/03/153938");
 
             Assert.IsNotNull(actual);
         }

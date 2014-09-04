@@ -37,6 +37,14 @@ namespace OEmbedSharp
                 Schemes = new[] { @"https?://www\.slideshare\.net/.+/.+" },
                 Endpoint = "http://www.slideshare.net/api/oembed/2"
             });
+
+            // Hatena Blog
+            Providers.Add(new OEmbedProvider
+            {
+                Name = "Hatena Blog",
+                Schemes = new[] { @"http://.+\.hatenablog\.com/.+", @"http://.+\.hatenablog\.jp/.+", @"http://.+\.hateblo\.jp/.+", @"http://.+\.hatenadialy\.com/.+", @"http://.+\.hatenadialy\.jp/.+" },
+                Endpoint = "http://hatenablog.com/oembed"
+            });
         }
 
         public OEmbed()
@@ -64,8 +72,6 @@ namespace OEmbedSharp
             get { return _providers; }
         }
 
-        public bool EnableCache { get; set; }
-
         public bool CanEmbed(string url)
         {
             return _providers.Any(p => p.CanHandleUrl(url));
@@ -73,9 +79,7 @@ namespace OEmbedSharp
 
         public OEmbedResponse Embed(string url)
         {
-            var response = EmbedAsync(url).Result;
-
-            return response;
+            return EmbedAsync(url).Result;
         }
 
         public async Task<OEmbedResponse> EmbedAsync(string url)
@@ -92,7 +96,7 @@ namespace OEmbedSharp
                 throw new ArgumentException("url");
             }
 
-            if (_options.EnableCache && _cache.Contains(url))
+            if (_cache.Contains(url))
             {
                 return (OEmbedResponse)_cache.Get(url);
             }

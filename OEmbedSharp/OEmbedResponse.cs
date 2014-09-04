@@ -46,10 +46,10 @@ namespace OEmbedSharp
         public string Html { get; set; }
 
         [JsonProperty("width")]
-        public int Width { get; set; }
+        public string Width { get; set; }
 
         [JsonProperty("height")]
-        public int Height { get; set; }
+        public string Height { get; set; }
 
         private const string PhotoTemplate = "<img src=\"{0}\" alt=\"{1}\" />";
         private const string LinkTemplate = "<a href=\"{0}\">{1}</a>";
